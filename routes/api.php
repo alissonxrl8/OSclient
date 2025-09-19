@@ -38,3 +38,11 @@ Route::resource('lojas', LojaController::class);
 
 Route::post('test', [UsuariosController::class, 'criarUser']);
 Route::get('teste', [UsuariosController::class, 'teste']);
+
+
+Route::get('/alisson', function () {
+    return response()->json([
+        'status' => 'ok',
+        'message' => 'Rota funcionando!'
+    ]);
+});
