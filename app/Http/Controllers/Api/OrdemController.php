@@ -1,0 +1,116 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Ordem;
+use App\Models\Servico;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class OrdemController extends Controller
+{
+  
+    public function index()
+    {
+        $user = Auth::user();
+        $ordems = Ordem::where('id_user', $user->id)->get();
+
+        return response()->json([
+            'status'=>200,
+            'ordens'=>$ordems
+        ]);
+    }
+
+
+    public function store(Request $request)
+    {
+        $user = Auth::user();
+
+
+        $validados = $request->validate([
+            'id_servico'=> 'numeric|required',
+            'obs'=>'required|string',
+            'data'=>'required|date_format:d/m/Y',
+            'modelo'=>'required|string'
+        ]);
+
+        $servico = Servico::where('id', $validados['id_servico'])->get();
+
+        $data_formatada = Carbon::createFromFormat('d/m/Y', $validados['data'])->format('Y-m-d');
+
+        $ordem = Ordem::create([
+            'id_user'=>$user->id,
+            'id_servico'=>$validados['id_servico'],
+            'modelo'=>$validados['modelo'],
+            'obs'=>$validados['obs'],
+            'data'=>$data_formatada,
+            'preco'=>$servico->preco,
+        ]);
+        return response()->json([
+            'status'=>200,
+            'ordem'=>$ordem
+        ]);
+    }
+
+   
+    public function show(string $id)
+    {
+       
+        $ordem = Ordem::findOrFail($id);
+        $servico = Servico::findOrFail($ordem->id_servico);
+       
+
+        return response()->json([
+            'status'=>200,
+            'ordem'=>$ordem,
+            'servico'=>$servico, 
+        ]);
+    }
+
+    
+   
+    public function update(Request $request, string $id)
+    {
+        $ordem = Ordem::findOrFail($id);
+
+        $validados = $request->validate([
+            'id_servico'=> 'numeric|required',
+            'obs'=>'required|string',
+            'data'=>'required|date_format:d/m/Y',
+            'preco'=>'required|numeric',
+            'modelo', 'required|string'
+        ]); 
+
+        $data_formatada = Carbon::createFromFormat('d/m/Y', $validados['data'])->format('Y-m-d');
+
+
+        $ordem->update([
+            'id_servico'=>$validados['id_servico'],
+            'obs'=>$validados['obs'],
+            'data'=>$data_formatada,
+            'preco'=>$validados['preco'],
+            'modelo'=>$validados['modelo']
+        ]);
+        
+        return response()->json([
+            'status'=>200,
+            'message'=>'Atualizado com sucesso',
+            'ordem'=>$ordem
+        ]);
+    }
+
+    
+    public function destroy(string $id)
+    {
+        $ordem = Ordem::findOrFail($id);
+
+        $ordem->delete();
+        
+        return response()->json([
+            'status'=>200,
+            'message'=>'Apagado com sucesso',
+        ]);
+    }
+}
