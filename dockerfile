@@ -11,18 +11,15 @@ RUN apt-get update && apt-get install -y \
 # 3️⃣ Instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# 4️⃣ Copiar o projeto para o container
+# 4️⃣ Copiar o projeto
 WORKDIR /var/www/html
 COPY . .
 
 # 5️⃣ Instalar dependências do Laravel
 RUN composer install --no-dev --optimize-autoloader
 
-# 6️⃣ Rodar migrations
-RUN php artisan migrate --force
-
-# 7️⃣ Expor a porta que o Railway vai usar
+# 6️⃣ Expor a porta
 EXPOSE 8080
 
-# 8️⃣ Comando para iniciar o Laravel
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8080"]
+# 7️⃣ Comando de start: migrations + seed + serve
+CMD php artisan migrate --force --seed && php artisan serve --host=0.0.0.0 --port=8080
