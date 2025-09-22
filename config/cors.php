@@ -7,7 +7,7 @@ return [
     'allowed_methods' => ['*'],
 
     // Coloque diretamente a origem do Ionic, sem env
-    'allowed_origins' => ['http://localhost:8101'],
+    'allowed_origins' => ['*'], // libera qualquer origem,
 
     'allowed_origins_patterns' => [],
 
