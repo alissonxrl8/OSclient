@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ClienteController;
 use App\Http\Controllers\Api\LoginController;
 use App\Http\Controllers\Api\OrdemController;
+use App\Http\Controllers\Api\PagesController;
 use App\Http\Controllers\Api\ServicoController;
 use App\Http\Controllers\Api\TesteController;
 use App\Http\Controllers\Api\UsuariosController;
@@ -25,6 +26,7 @@ Route::group(['middleware' => ['auth:sanctum']], function(){
     Route::resource('servicos', ServicoController::class);
     Route::resource('clientes', ClienteController::class);
     Route::resource('ordens', OrdemController::class);
+    Route::get('home', [PagesController::class, 'home']);
 
 });
 
