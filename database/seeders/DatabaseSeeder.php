@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Loja;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash; // IMPORTANTE: para fazer hash da senha
@@ -18,8 +19,14 @@ class DatabaseSeeder extends Seeder
             'email' => 'alisson@gmail.com',
             'level' => 1,
             'password' => Hash::make('12345'),
-            'id_loja'=>0
-             // senha hashada aqui
+            'id_loja'=>1
         ]);
+
+        Loja::factory()->create([
+            'nome' => 'gkcell',
+            'cnpj' => '123456789',
+        ]);
+
+        
     }
 }

@@ -2,30 +2,22 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Cross-Origin Resource Sharing (CORS) Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Permite que o frontend se comunique com a API sem bloquear por CORS.
-    | Para produção, ajuste 'allowed_origins' para o domínio do frontend.
-    |
-    */
+    'paths' => ['api/*'], // Só permitir CORS nas rotas da API
 
-    'paths' => ['api/*'], // aplica CORS apenas nas rotas da API
+    'allowed_methods' => ['*'],
 
-    'allowed_methods' => ['*'], // libera todos os métodos (GET, POST, PUT, DELETE...)
-
-    'allowed_origins' => ['*'], // libera qualquer origem (teste local/ionic)
+    // Coloque diretamente a origem do Ionic, sem env
+    'allowed_origins' => ['http://localhost:8101'],
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'], // libera todos os headers
+    'allowed_headers' => ['*'],
 
     'exposed_headers' => [],
 
     'max_age' => 0,
 
-    'supports_credentials' => false, // false para facilitar teste local
+    // false ajuda a testar local sem complicar com credenciais
+    'supports_credentials' => false,
 
 ];
