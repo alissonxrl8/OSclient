@@ -11,8 +11,13 @@ class PagesController extends Controller
 {
     public function Home(){
         $user = Auth::user();
-        Loja::where('id', $user->id_loja)->get();
-        
+        $loja = Loja::where('id', $user->id_loja)->get();
+
+        return response()->json([
+            'status'=>200,
+            'message'=>'ok',
+            'loja'=>$loja
+        ]);
 
     }
 }
