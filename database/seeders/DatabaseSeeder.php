@@ -22,11 +22,10 @@ class DatabaseSeeder extends Seeder
             'id_loja'=>1
         ]);
 
-        Loja::factory()->create([
-            'nome' => 'gkcell',
-            'cnpj' => '123456789',
-        ]);
-
+        Loja::create([
+    'nome' => 'gkcell',
+    'cnpj' => '123456789',
+]);
         
     }
 }

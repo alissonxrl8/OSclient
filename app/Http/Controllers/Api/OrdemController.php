@@ -28,21 +28,28 @@ class OrdemController extends Controller
     {
         $user = Auth::user();
 
+    
+
 
         $validados = $request->validate([
             'id_servico'=> 'numeric|required',
+            'id_cliente'=> 'numeric|required',
             'obs'=>'required|string',
             'data'=>'required|date_format:d/m/Y',
             'modelo'=>'required|string'
         ]);
 
-        $servico = Servico::where('id', $validados['id_servico'])->get();
+        
 
+        $servico = Servico::findOrFail($validados['id_servico']);
+        
+       
         $data_formatada = Carbon::createFromFormat('d/m/Y', $validados['data'])->format('Y-m-d');
 
         $ordem = Ordem::create([
             'id_user'=>$user->id,
             'id_servico'=>$validados['id_servico'],
+            'id_cliente'=>$validados['id_cliente'],
             'modelo'=>$validados['modelo'],
             'obs'=>$validados['obs'],
             'data'=>$data_formatada,

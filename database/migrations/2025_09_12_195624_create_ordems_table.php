@@ -14,9 +14,11 @@ return new class extends Migration
         Schema::create('ordems', function (Blueprint $table) {
             $table->id();
             $table->string('obs');
+            $table->string('modelo');
             $table->integer('id_servico');
             $table->decimal('preco', 10, 2);
             $table->integer('id_user');
+            $table->integer('id_cliente');
             $table->date('data');
             $table->timestamps();
         });
