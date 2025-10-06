@@ -17,7 +17,7 @@ class ServicoController extends Controller
         $servicos = Servico::Where('id_user',$user->id)->get();
         return response()->json([
             'status'=>200,
-            'serviços'=>$servicos
+            'servicos'=>$servicos
         ]);
     }
 
@@ -56,7 +56,7 @@ class ServicoController extends Controller
           $servico = Servico::findOrFail($id);
         return response()->json([
             'status'=>200,
-            'serviçoo'=>$servico
+            'servico'=>$servico
         ]);
     }
 
@@ -77,7 +77,7 @@ class ServicoController extends Controller
         return response()->json([
             'status'=>200,
             'message'=>'atualizado com sucesso',
-            'serviço'=>$servico
+            'servico'=>$servico
         ]);
     }
 
