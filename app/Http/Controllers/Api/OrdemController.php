@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Cliente;
 use App\Models\Ordem;
 use App\Models\Servico;
 use Carbon\Carbon;
@@ -15,6 +16,7 @@ class OrdemController extends Controller
     public function index()
     {
         $user = Auth::user();
+    
         $ordems = Ordem::where('id_user', $user->id)->get();
 
         return response()->json([
@@ -75,6 +77,17 @@ class OrdemController extends Controller
             'servico'=>$servico, 
         ]);
     }
+
+    public function ClienteOrdem(string $id){
+       $cliente = Cliente::findOrFail($id);
+       $ordens = Ordem::where('id_cliente', $cliente->id)->get();
+       return response()->json([
+        'cliente'=>$cliente,
+        'ordens'=>$ordens
+       ]);
+
+    }
+
 
     
    
