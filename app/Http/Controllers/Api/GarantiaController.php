@@ -28,6 +28,8 @@ class GarantiaController extends Controller
             return [
                 'id' => $garantia->id,
                 'id_orcamento' => $garantia->id_orcamento,
+                'id_cliente' => $garantia->id_cliente,
+                'id_user' => $garantia->id_user,
                 'data_garantia' => $data_garantia->format('Y-m-d'),
                 'data_final' => $data_final->format('Y-m-d'),
                 'dias_restantes' => $dias_restantes,
@@ -57,6 +59,8 @@ class GarantiaController extends Controller
             'garantia' => [
                 'id' => $garantia->id,
                 'id_orcamento' => $garantia->id_orcamento,
+                'id_cliente' => $garantia->id_cliente,
+                'id_user' => $garantia->id_user,
                 'data_garantia' => $data_garantia->format('Y-m-d'),
                 'data_final' => $data_final->format('Y-m-d'),
                 'dias_restantes' => $dias_restantes,
@@ -74,13 +78,13 @@ class GarantiaController extends Controller
             'id_orcamento'=>'required|numeric'
         ]);
 
-        // Ajuste para Y-m-d
         $data_formatada = Carbon::parse($validados['data_garantia'])->format('Y-m-d');
 
         $garantia = Garantia::create([
-            'data_garantia'=>$data_formatada,
-            'id_cliente'=>$user->id,
-            'id_orcamento'=>$validados['id_orcamento']
+            'data_garantia' => $data_formatada,
+            'id_cliente' => $user->id,
+            'id_user' => $user->id,
+            'id_orcamento' => $validados['id_orcamento']
         ]);
 
         $ordem = Ordem::find($garantia->id_orcamento);
@@ -97,6 +101,8 @@ class GarantiaController extends Controller
             'garantia' => [
                 'id' => $garantia->id,
                 'id_orcamento' => $garantia->id_orcamento,
+                'id_cliente' => $garantia->id_cliente,
+                'id_user' => $garantia->id_user,
                 'data_garantia' => $data_garantia->format('Y-m-d'),
                 'data_final' => $data_final->format('Y-m-d'),
                 'dias_restantes' => $dias_restantes,
@@ -111,7 +117,9 @@ class GarantiaController extends Controller
 
         $validados = $request->validate([
             'data_garantia'=>'sometimes|date',
-            'id_orcamento'=>'sometimes|numeric'
+            'id_orcamento'=>'sometimes|numeric',
+            'id_cliente'=>'sometimes|numeric',
+            'id_user'=>'sometimes|numeric'
         ]);
 
         if(isset($validados['data_garantia'])){
@@ -119,6 +127,12 @@ class GarantiaController extends Controller
         }
         if(isset($validados['id_orcamento'])){
             $garantia->id_orcamento = $validados['id_orcamento'];
+        }
+        if(isset($validados['id_cliente'])){
+            $garantia->id_cliente = $validados['id_cliente'];
+        }
+        if(isset($validados['id_user'])){
+            $garantia->id_user = $validados['id_user'];
         }
 
         $garantia->save();
@@ -137,6 +151,8 @@ class GarantiaController extends Controller
             'garantia' => [
                 'id' => $garantia->id,
                 'id_orcamento' => $garantia->id_orcamento,
+                'id_cliente' => $garantia->id_cliente,
+                'id_user' => $garantia->id_user,
                 'data_garantia' => $data_garantia->format('Y-m-d'),
                 'data_final' => $data_final->format('Y-m-d'),
                 'dias_restantes' => $dias_restantes,

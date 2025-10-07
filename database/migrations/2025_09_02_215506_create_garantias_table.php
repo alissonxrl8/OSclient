@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->date('data_garantia');
             $table->integer('id_user');
+            $table->integer('id_cliente');
             $table->integer('id_orcamento');
             $table->timestamps();
         });
