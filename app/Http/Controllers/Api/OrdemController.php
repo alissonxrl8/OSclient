@@ -99,43 +99,29 @@ public function store(Request $request)
     
    
     public function update(Request $request, string $id)
-    {
-        $ordem = Ordem::findOrFail($id);
+{
+    $ordem = Ordem::findOrFail($id);
 
-          
-        $validados = $request->validate([
-            'obs'=>'required|string',
-            'data'=>'required|date_format:d/m/Y',
-            'preco'=>'required|numeric',
-            'modelo'=> 'required|string',
-            'descricao'=> 'required|string',
-            'preco'=> 'required|numeric',
-            'preco_pago'=> 'required|numeric',
-        ]); 
+    $validados = $request->validate([
+        'servico' => 'required|string',
+        'descricao' => 'nullable|string',
+        'dias_garantia' => 'nullable|numeric',
+        'preco' => 'required|numeric',
+        'preco_pago' => 'nullable|numeric',
+        'modelo' => 'required|string',
+        'obs' => 'nullable|string',
+        'data' => 'required|date'
+    ]);
 
-        $servico = Servico::findOrFail($validados['id_servico']);
-            
+    $ordem->update($validados);
 
-        $data_formatada = Carbon::createFromFormat('d/m/Y', $validados['data'])->format('Y-m-d');
+    return response()->json([
+        'status' => 200,
+        'message' => 'Ordem atualizada com sucesso!',
+        'ordem' => $ordem
+    ]);
+}
 
-
-        $ordem->update([
-    'modelo' => $validados['modelo'],
-    'obs' => $validados['obs'],
-    'data' => $data_formatada,
-    'preco' => $validados['preco'],
-    'preco_pago' => $validados['preco_pago'],
-    'descricao' => $validados['descricao'],
-    'dias_garantia' => $validados['dias_garantia'],
-    'servico' => $validados['servico'], 
-        ]);
-        
-        return response()->json([
-            'status'=>200,
-            'message'=>'Atualizado com sucesso',
-            'ordem'=>$ordem
-        ]);
-    }
 
     
     public function destroy(string $id)
