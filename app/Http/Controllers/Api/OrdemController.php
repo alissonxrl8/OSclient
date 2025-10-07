@@ -108,7 +108,10 @@ public function store(Request $request)
             'obs'=>'required|string',
             'data'=>'required|date_format:d/m/Y',
             'preco'=>'required|numeric',
-            'modelo', 'required|string'
+            'modelo'=> 'required|string',
+            'descricao'=> 'required|string',
+            'preco'=> 'required|numeric',
+            'preco_pago'=> 'required|numeric',
         ]); 
 
         $servico = Servico::findOrFail($validados['id_servico']);
