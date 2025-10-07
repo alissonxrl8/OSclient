@@ -80,7 +80,7 @@ class OrdemController extends Controller
 
     public function ClienteOrdem(string $id){
        $cliente = Cliente::findOrFail($id);
-       $ordens = Ordem::where('id_cliente', $cliente->id)->get();
+       $ordens = Ordem::where('id_cliente', $id)->get();
        return response()->json([
         'cliente'=>$cliente,
         'ordens'=>$ordens
