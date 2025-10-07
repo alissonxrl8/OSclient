@@ -121,8 +121,6 @@ public function store(Request $request)
 
 
         $ordem->update([
-    'id_servico' => $validados['id_servico'],
-    'id_cliente' => $validados['id_cliente'],
     'modelo' => $validados['modelo'],
     'obs' => $validados['obs'],
     'data' => $data_formatada,
