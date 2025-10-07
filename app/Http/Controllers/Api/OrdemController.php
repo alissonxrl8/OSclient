@@ -25,43 +25,37 @@ class OrdemController extends Controller
         ]);
     }
 
+public function store(Request $request)
+{
+    $user = Auth::user();
 
-    public function store(Request $request)
-    {
-        $user = Auth::user();
+    $validados = $request->validate([
+        'id_servico'=> 'numeric|required',
+        'id_cliente'=> 'numeric|required',
+        'obs'=>'nullable|string',
+        'data'=>'required|date_format:Y-m-d',
+        'modelo'=>'required|string'
+    ]);
 
+    $servico = Servico::findOrFail($validados['id_servico']);
     
+    $data_formatada = Carbon::createFromFormat('Y-m-d', $validados['data'])->format('Y-m-d');
 
+    $ordem = Ordem::create([
+        'id_user'=>$user->id,
+        'id_servico'=>$validados['id_servico'],
+        'id_cliente'=>$validados['id_cliente'],
+        'modelo'=>$validados['modelo'],
+        'obs'=>$validados['obs'],
+        'data'=>$data_formatada,
+        'preco'=>$servico->preco,
+    ]);
 
-        $validados = $request->validate([
-            'id_servico'=> 'numeric|required',
-            'id_cliente'=> 'numeric|required',
-            'obs'=>'required|string',
-            'data'=>'required|date_format:d/m/Y',
-            'modelo'=>'required|string'
-        ]);
-
-        
-
-        $servico = Servico::findOrFail($validados['id_servico']);
-        
-       
-        $data_formatada = Carbon::createFromFormat('d/m/Y', $validados['data'])->format('Y-m-d');
-
-        $ordem = Ordem::create([
-            'id_user'=>$user->id,
-            'id_servico'=>$validados['id_servico'],
-            'id_cliente'=>$validados['id_cliente'],
-            'modelo'=>$validados['modelo'],
-            'obs'=>$validados['obs'],
-            'data'=>$data_formatada,
-            'preco'=>$servico->preco,
-        ]);
-        return response()->json([
-            'status'=>200,
-            'ordem'=>$ordem
-        ]);
-    }
+    return response()->json([
+        'status'=>200,
+        'ordem'=>$ordem
+    ]);
+}
 
    
     public function show(string $id)
@@ -79,7 +73,9 @@ class OrdemController extends Controller
     }
 
     public function ClienteOrdem(string $id){
+     ;
        $cliente = Cliente::findOrFail($id);
+       
        $ordens = Ordem::where('id_cliente', $id)->get();
        return response()->json([
         'cliente'=>$cliente,
