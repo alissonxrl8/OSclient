@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ClienteController;
+use App\Http\Controllers\Api\GarantiaController;
 use App\Http\Controllers\Api\LoginController;
 use App\Http\Controllers\Api\OrdemController;
 use App\Http\Controllers\Api\PagesController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\Api\ServicoController;
 use App\Http\Controllers\Api\TesteController;
 use App\Http\Controllers\Api\UsuariosController;
 use App\Http\Controllers\LojaController;
+use App\Models\Garantia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +28,7 @@ Route::group(['middleware' => ['auth:sanctum']], function(){
     Route::resource('servicos', ServicoController::class);
     Route::resource('clientes', ClienteController::class);
     Route::resource('ordens', OrdemController::class);
+    Route::resource('garantias', GarantiaController::class);
     Route::get('ordens-cliente/{id}', [OrdemController::class, 'ClienteOrdem']);
     Route::get('home', [PagesController::class, 'home']);
 
