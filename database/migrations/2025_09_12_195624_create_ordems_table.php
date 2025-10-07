@@ -15,8 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('obs');
             $table->string('modelo');
+            $table->string('servico');
+            $table->string('descricao');
+            $table->decimal('dias_garantia');
             $table->integer('id_servico');
             $table->decimal('preco', 10, 2);
+            $table->decimal('preco_pago', 10, 2);
             $table->integer('id_user');
             $table->integer('id_cliente');
             $table->date('data');
