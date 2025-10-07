@@ -26,7 +26,7 @@ Route::group(['middleware' => ['auth:sanctum']], function(){
     Route::resource('servicos', ServicoController::class);
     Route::resource('clientes', ClienteController::class);
     Route::resource('ordens', OrdemController::class);
-    Route::get('ordens-cliente', [OrdemController::class, 'ClienteOrdem']);
+    Route::get('ordens-cliente/{id}', [OrdemController::class, 'ClienteOrdem']);
     Route::get('home', [PagesController::class, 'home']);
 
 });
