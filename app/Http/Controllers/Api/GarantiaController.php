@@ -18,7 +18,7 @@ class GarantiaController extends Controller
 
         $garantiasFormatadas = $garantias->map(function($garantia) {
             $ordem = Ordem::find($garantia->id_orcamento);
-            $dias_garantia = $ordem->dias_garantia ?? 0;
+            $dias_garantia = $ordem ? (int) ($ordem->dias_garantia ?? 0) : 0;
 
             $data_garantia = Carbon::parse($garantia->data_garantia);
             $data_final = $data_garantia->copy()->addDays($dias_garantia);
@@ -47,7 +47,7 @@ class GarantiaController extends Controller
     {
         $garantia = Garantia::findOrFail($id);
         $ordem = Ordem::find($garantia->id_orcamento);
-        $dias_garantia = $ordem->dias_garantia ?? 0;
+        $dias_garantia = $ordem ? (int) ($ordem->dias_garantia ?? 0) : 0;
 
         $data_garantia = Carbon::parse($garantia->data_garantia);
         $data_final = $data_garantia->copy()->addDays($dias_garantia);
@@ -74,8 +74,8 @@ class GarantiaController extends Controller
         $user = Auth::user();
 
         $validados = $request->validate([
-            'data_garantia'=>'required|date',
-            'id_orcamento'=>'required|numeric'
+            'data_garantia' => 'required|date',
+            'id_orcamento' => 'required|numeric'
         ]);
 
         $data_formatada = Carbon::parse($validados['data_garantia'])->format('Y-m-d');
@@ -88,7 +88,7 @@ class GarantiaController extends Controller
         ]);
 
         $ordem = Ordem::find($garantia->id_orcamento);
-        $dias_garantia = $ordem->dias_garantia ?? 0;
+        $dias_garantia = $ordem ? (int) ($ordem->dias_garantia ?? 0) : 0;
 
         $data_garantia = Carbon::parse($garantia->data_garantia);
         $data_final = $data_garantia->copy()->addDays($dias_garantia);
@@ -116,10 +116,10 @@ class GarantiaController extends Controller
         $garantia = Garantia::findOrFail($id);
 
         $validados = $request->validate([
-            'data_garantia'=>'sometimes|date',
-            'id_orcamento'=>'sometimes|numeric',
-            'id_cliente'=>'sometimes|numeric',
-            'id_user'=>'sometimes|numeric'
+            'data_garantia' => 'sometimes|date',
+            'id_orcamento' => 'sometimes|numeric',
+            'id_cliente' => 'sometimes|numeric',
+            'id_user' => 'sometimes|numeric'
         ]);
 
         if(isset($validados['data_garantia'])){
@@ -138,7 +138,7 @@ class GarantiaController extends Controller
         $garantia->save();
 
         $ordem = Ordem::find($garantia->id_orcamento);
-        $dias_garantia = $ordem->dias_garantia ?? 0;
+        $dias_garantia = $ordem ? (int) ($ordem->dias_garantia ?? 0) : 0;
 
         $data_garantia = Carbon::parse($garantia->data_garantia);
         $data_final = $data_garantia->copy()->addDays($dias_garantia);
