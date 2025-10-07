@@ -10,6 +10,7 @@ class Ordem extends Model
         'id_user',
         'id_cliente',
         'id_servico',
+        'servico',
         'preco',
         'preco_pago',
         'descricao',

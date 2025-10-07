@@ -28,7 +28,7 @@ class OrdemController extends Controller
 public function store(Request $request)
 {
     $user = Auth::user();
-
+    
     $validados = $request->validate([
         'id_servico'=> 'numeric|required',
         'id_cliente'=> 'numeric|required',
@@ -37,19 +37,30 @@ public function store(Request $request)
         'modelo'=>'required|string'
     ]);
 
+  
+
     $servico = Servico::findOrFail($validados['id_servico']);
+
+
     
     $data_formatada = Carbon::createFromFormat('Y-m-d', $validados['data'])->format('Y-m-d');
 
+
+    
+
     $ordem = Ordem::create([
-        'id_user'=>$user->id,
-        'id_servico'=>$validados['id_servico'],
-        'id_cliente'=>$validados['id_cliente'],
-        'modelo'=>$validados['modelo'],
-        'obs'=>$validados['obs'],
-        'data'=>$data_formatada,
-        'preco'=>$servico->preco,
-    ]);
+    'id_user' => $user->id,
+    'id_servico' => $validados['id_servico'],
+    'id_cliente' => $validados['id_cliente'],
+    'modelo' => $validados['modelo'],
+    'obs' => $validados['obs'],
+    'data' => $data_formatada,
+    'preco' => $servico->preco,
+    'preco_pago' => $servico->preco_pago,
+    'descricao' => $servico->descricao,
+    'dias_garantia' => $servico->dias_garantia,
+    'servico' => $servico->servico, // 👈 pega o nome do serviço da tabela “servicos”
+]);
 
     return response()->json([
         'status'=>200,
