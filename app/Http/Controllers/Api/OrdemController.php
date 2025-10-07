@@ -102,6 +102,7 @@ public function store(Request $request)
     {
         $ordem = Ordem::findOrFail($id);
 
+          
         $validados = $request->validate([
             'id_servico'=> 'numeric|required',
             'obs'=>'required|string',
@@ -110,15 +111,23 @@ public function store(Request $request)
             'modelo', 'required|string'
         ]); 
 
+        $servico = Servico::findOrFail($validados['id_servico']);
+            
+
         $data_formatada = Carbon::createFromFormat('d/m/Y', $validados['data'])->format('Y-m-d');
 
 
         $ordem->update([
-            'id_servico'=>$validados['id_servico'],
-            'obs'=>$validados['obs'],
-            'data'=>$data_formatada,
-            'preco'=>$validados['preco'],
-            'modelo'=>$validados['modelo']
+    'id_servico' => $validados['id_servico'],
+    'id_cliente' => $validados['id_cliente'],
+    'modelo' => $validados['modelo'],
+    'obs' => $validados['obs'],
+    'data' => $data_formatada,
+    'preco' => $validados['preco'],
+    'preco_pago' => $validados['preco_pago'],
+    'descricao' => $validados['descricao'],
+    'dias_garantia' => $validados['dias_garantia'],
+    'servico' => $validados['servico'], 
         ]);
         
         return response()->json([
