@@ -104,7 +104,6 @@ public function store(Request $request)
 
           
         $validados = $request->validate([
-            'id_servico'=> 'numeric|required',
             'obs'=>'required|string',
             'data'=>'required|date_format:d/m/Y',
             'preco'=>'required|numeric',
