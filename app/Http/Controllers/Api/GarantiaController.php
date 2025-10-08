@@ -9,24 +9,14 @@ use App\Models\Ordem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Laravel\Sanctum\PersonalAccessToken; // para validar token via query string
+use Illuminate\Support\Facades\Auth;
 
 class GarantiaController extends Controller
 {
-    // GET /api/garantias?cliente=ID
-    public function index(Request $request)
+    public function index()
     {
-        $token = $request->bearerToken();
-        if (!$token) return response()->json(['status'=>false,'message'=>'token não fornecido'],401);
-
-        $user = auth('sanctum')->user();
-        if(!$user) return response()->json(['status'=>false,'message'=>'token inválido'],401);
-
-        $clienteId = $request->query('cliente');
-
-        $garantias = Garantia::where('id_user', $user->id)
-                             ->when($clienteId, fn($q) => $q->where('id_cliente', $clienteId))
-                             ->get();
+        $user = Auth::user();
+        $garantias = Garantia::where('id_cliente', $user->id)->get();
 
         $garantiasFormatadas = $garantias->map(function($garantia) {
             $ordem = Ordem::find($garantia->id_orcamento);
@@ -55,22 +45,9 @@ class GarantiaController extends Controller
         ]);
     }
 
-    // GET /api/baixar-garantia/{id}?token=xxxx
-    public function baixarGarantia(Request $request, $id)
+    public function baixarGarantia($id)
     {
-        // Pega token via query string
-        $token = $request->query('token');
-        if (!$token) return response()->json(['status'=>false,'message'=>'token não fornecido'],401);
-
-        // Valida token com Sanctum
-        $tokenModel = PersonalAccessToken::findToken($token);
-        if (!$tokenModel) return response()->json(['status'=>false,'message'=>'token inválido'],401);
-
-        $user = $tokenModel->tokenable; // usuário autenticado
-
         $garantia = Garantia::findOrFail($id);
-        if ($garantia->id_user != $user->id) return response()->json(['status'=>false,'message'=>'Acesso negado'],403);
-
         $ordem = Ordem::findOrFail($garantia->id_orcamento);
         $cliente = Cliente::findOrFail($garantia->id_cliente);
 
