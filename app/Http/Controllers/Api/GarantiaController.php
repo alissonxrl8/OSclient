@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Cliente;
 use App\Models\Garantia;
 use App\Models\Ordem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class GarantiaController extends Controller
 {
@@ -20,9 +22,9 @@ class GarantiaController extends Controller
             $ordem = Ordem::find($garantia->id_orcamento);
             $dias_garantia = $ordem ? (int) ($ordem->dias_garantia ?? 0) : 0;
 
-            $data_garantia = Carbon::parse($garantia->data_garantia);
-            $data_final = $data_garantia->copy()->addDays($dias_garantia);
-            $dias_restantes = Carbon::now()->diffInDays($data_final, false);
+            $data_garantia = Carbon::parse($garantia->data_garantia)->startOfDay();
+            $data_final = $data_garantia->copy()->addDays($dias_garantia)->startOfDay();
+            $dias_restantes = Carbon::now()->startOfDay()->diffInDays($data_final, false);
             $expirada = $dias_restantes < 0;
 
             return [
@@ -49,9 +51,9 @@ class GarantiaController extends Controller
         $ordem = Ordem::find($garantia->id_orcamento);
         $dias_garantia = $ordem ? (int) ($ordem->dias_garantia ?? 0) : 0;
 
-        $data_garantia = Carbon::parse($garantia->data_garantia);
-        $data_final = $data_garantia->copy()->addDays($dias_garantia);
-        $dias_restantes = Carbon::now()->diffInDays($data_final, false);
+        $data_garantia = Carbon::parse($garantia->data_garantia)->startOfDay();
+        $data_final = $data_garantia->copy()->addDays($dias_garantia)->startOfDay();
+        $dias_restantes = Carbon::now()->startOfDay()->diffInDays($data_final, false);
         $expirada = $dias_restantes < 0;
 
         return response()->json([
@@ -87,88 +89,49 @@ class GarantiaController extends Controller
             'id_orcamento' => $validados['id_orcamento']
         ]);
 
-        $ordem = Ordem::find($garantia->id_orcamento);
-        $dias_garantia = $ordem ? (int) ($ordem->dias_garantia ?? 0) : 0;
-
-        $data_garantia = Carbon::parse($garantia->data_garantia);
-        $data_final = $data_garantia->copy()->addDays($dias_garantia);
-        $dias_restantes = Carbon::now()->diffInDays($data_final, false);
-        $expirada = $dias_restantes < 0;
-
-        return response()->json([
-            'status' => 201,
-            'mensagem' => 'Garantia cadastrada com sucesso',
-            'garantia' => [
-                'id' => $garantia->id,
-                'id_orcamento' => $garantia->id_orcamento,
-                'id_cliente' => $garantia->id_cliente,
-                'id_user' => $garantia->id_user,
-                'data_garantia' => $data_garantia->format('Y-m-d'),
-                'data_final' => $data_final->format('Y-m-d'),
-                'dias_restantes' => $dias_restantes,
-                'expirada' => $expirada
-            ]
-        ]);
+        return response()->json(['status'=>201,'mensagem'=>'Garantia cadastrada com sucesso']);
     }
 
     public function update(Request $request, string $id)
     {
         $garantia = Garantia::findOrFail($id);
-
         $validados = $request->validate([
             'data_garantia' => 'sometimes|date',
             'id_orcamento' => 'sometimes|numeric',
             'id_cliente' => 'sometimes|numeric',
             'id_user' => 'sometimes|numeric'
         ]);
-
-        if(isset($validados['data_garantia'])){
-            $garantia->data_garantia = Carbon::parse($validados['data_garantia'])->format('Y-m-d');
-        }
-        if(isset($validados['id_orcamento'])){
-            $garantia->id_orcamento = $validados['id_orcamento'];
-        }
-        if(isset($validados['id_cliente'])){
-            $garantia->id_cliente = $validados['id_cliente'];
-        }
-        if(isset($validados['id_user'])){
-            $garantia->id_user = $validados['id_user'];
-        }
-
-        $garantia->save();
-
-        $ordem = Ordem::find($garantia->id_orcamento);
-        $dias_garantia = $ordem ? (int) ($ordem->dias_garantia ?? 0) : 0;
-
-        $data_garantia = Carbon::parse($garantia->data_garantia);
-        $data_final = $data_garantia->copy()->addDays($dias_garantia);
-        $dias_restantes = Carbon::now()->diffInDays($data_final, false);
-        $expirada = $dias_restantes < 0;
-
-        return response()->json([
-            'status' => 200,
-            'mensagem' => 'Garantia atualizada com sucesso',
-            'garantia' => [
-                'id' => $garantia->id,
-                'id_orcamento' => $garantia->id_orcamento,
-                'id_cliente' => $garantia->id_cliente,
-                'id_user' => $garantia->id_user,
-                'data_garantia' => $data_garantia->format('Y-m-d'),
-                'data_final' => $data_final->format('Y-m-d'),
-                'dias_restantes' => $dias_restantes,
-                'expirada' => $expirada
-            ]
-        ]);
+        $garantia->update($validados);
+        return response()->json(['status'=>200,'mensagem'=>'Garantia atualizada com sucesso']);
     }
 
     public function destroy(string $id)
     {
         $garantia = Garantia::findOrFail($id);
         $garantia->delete();
+        return response()->json(['status'=>200,'mensagem'=>'Garantia deletada com sucesso']);
+    }
 
-        return response()->json([
-            'status' => 200,
-            'mensagem' => 'Garantia deletada com sucesso'
-        ]);
+    public function baixarGarantia($id)
+    {
+        $garantia = Garantia::findOrFail($id);
+        $ordem = Ordem::findOrFail($garantia->id_orcamento);
+        $cliente = Cliente::findOrFail($garantia->id_cliente);
+
+        $dias_garantia = (int) ($ordem->dias_garantia ?? 0);
+        $data_inicio = Carbon::parse($garantia->data_garantia);
+        $data_final = $data_inicio->copy()->addDays($dias_garantia);
+
+        $dados = [
+            'cliente' => $cliente,
+            'ordem' => $ordem,
+            'garantia' => $garantia,
+            'data_inicio' => $data_inicio->format('d/m/Y'),
+            'data_final' => $data_final->format('d/m/Y'),
+            'dias_garantia' => $dias_garantia,
+        ];
+
+        $pdf = Pdf::loadView('pdf.garantia', $dados);
+        return $pdf->download('garantia_'.$cliente->nome.'.pdf');
     }
 }
