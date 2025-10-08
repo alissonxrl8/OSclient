@@ -8,16 +8,21 @@ use App\Models\Garantia;
 use App\Models\Ordem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Laravel\Sanctum\PersonalAccessToken; // para validar token via query string
 
 class GarantiaController extends Controller
 {
     // GET /api/garantias?cliente=ID
     public function index(Request $request)
     {
-        $user = Auth::user();
-        $clienteId = $request->query('cliente'); // Pega ?cliente=123 da URL
+        $token = $request->bearerToken();
+        if (!$token) return response()->json(['status'=>false,'message'=>'token não fornecido'],401);
+
+        $user = auth('sanctum')->user();
+        if(!$user) return response()->json(['status'=>false,'message'=>'token inválido'],401);
+
+        $clienteId = $request->query('cliente');
 
         $garantias = Garantia::where('id_user', $user->id)
                              ->when($clienteId, fn($q) => $q->where('id_cliente', $clienteId))
@@ -50,106 +55,39 @@ class GarantiaController extends Controller
         ]);
     }
 
-    public function show(string $id)
+    // GET /api/baixar-garantia/{id}?token=xxxx
+    public function baixarGarantia(Request $request, $id)
     {
+        // Pega token via query string
+        $token = $request->query('token');
+        if (!$token) return response()->json(['status'=>false,'message'=>'token não fornecido'],401);
+
+        // Valida token com Sanctum
+        $tokenModel = PersonalAccessToken::findToken($token);
+        if (!$tokenModel) return response()->json(['status'=>false,'message'=>'token inválido'],401);
+
+        $user = $tokenModel->tokenable; // usuário autenticado
+
         $garantia = Garantia::findOrFail($id);
-        $ordem = Ordem::find($garantia->id_orcamento);
-        $dias_garantia = $ordem ? (int) ($ordem->dias_garantia ?? 0) : 0;
+        if ($garantia->id_user != $user->id) return response()->json(['status'=>false,'message'=>'Acesso negado'],403);
 
-        $data_garantia = Carbon::parse($garantia->data_garantia)->startOfDay();
-        $data_final = $data_garantia->copy()->addDays($dias_garantia)->startOfDay();
-        $dias_restantes = Carbon::now()->startOfDay()->diffInDays($data_final, false);
-        $expirada = $dias_restantes < 0;
+        $ordem = Ordem::findOrFail($garantia->id_orcamento);
+        $cliente = Cliente::findOrFail($garantia->id_cliente);
 
-        return response()->json([
-            'status' => 200,
-            'garantia' => [
-                'id' => $garantia->id,
-                'id_orcamento' => $garantia->id_orcamento,
-                'id_cliente' => $garantia->id_cliente,
-                'id_user' => $garantia->id_user,
-                'data_garantia' => $data_garantia->format('Y-m-d'),
-                'data_final' => $data_final->format('Y-m-d'),
-                'dias_restantes' => $dias_restantes,
-                'expirada' => $expirada
-            ]
-        ]);
+        $dias_garantia = (int) ($ordem->dias_garantia ?? 0);
+        $data_inicio = Carbon::parse($garantia->data_garantia);
+        $data_final = $data_inicio->copy()->addDays($dias_garantia);
+
+        $dados = [
+            'cliente' => $cliente,
+            'ordem' => $ordem,
+            'garantia' => $garantia,
+            'data_inicio' => $data_inicio->format('d/m/Y'),
+            'data_final' => $data_final->format('d/m/Y'),
+            'dias_garantia' => $dias_garantia,
+        ];
+
+        $pdf = Pdf::loadView('pdf.garantia', $dados);
+        return $pdf->download('garantia_'.$cliente->nome.'.pdf');
     }
-
-    public function store(Request $request)
-    {
-        $user = Auth::user();
-
-        $validados = $request->validate([
-            'data_garantia' => 'required|date',
-            'id_orcamento' => 'required|numeric'
-        ]);
-
-        $ordem = Ordem::findOrFail($validados['id_orcamento']);
-
-        $garantia = Garantia::create([
-            'data_garantia' => Carbon::parse($validados['data_garantia'])->format('Y-m-d'),
-            'id_cliente' => $ordem->id_cliente, // usa cliente da ordem
-            'id_user' => $user->id,
-            'id_orcamento' => $validados['id_orcamento']
-        ]);
-
-        return response()->json(['status'=>201,'mensagem'=>'Garantia cadastrada com sucesso']);
-    }
-
-    public function update(Request $request, string $id)
-    {
-        $garantia = Garantia::findOrFail($id);
-        $validados = $request->validate([
-            'data_garantia' => 'sometimes|date',
-            'id_orcamento' => 'sometimes|numeric'
-        ]);
-        $garantia->update($validados);
-        return response()->json(['status'=>200,'mensagem'=>'Garantia atualizada com sucesso']);
-    }
-
-    public function destroy(string $id)
-    {
-        $garantia = Garantia::findOrFail($id);
-        $garantia->delete();
-        return response()->json(['status'=>200,'mensagem'=>'Garantia deletada com sucesso']);
-    }
-
-   public function baixarGarantia(Request $request, $id)
-{
-    // Verifica token do query string se não vier pelo Bearer
-    $token = $request->query('token') ?? $request->bearerToken();
-    if (!$token) {
-        return response()->json(['status'=>false,'message'=>'token não fornecido'], 401);
-    }
-
-    // Valida token
-    $user = Auth::guard('api')->user(); // ou use JWT::parseToken()->authenticate() se JWT
-    if (!$user) return response()->json(['status'=>false,'message'=>'token inválido'], 401);
-
-    $garantia = Garantia::findOrFail($id);
-    if ($garantia->id_user != $user->id) {
-        return response()->json(['status'=>false,'message'=>'Acesso negado'], 403);
-    }
-
-    $ordem = Ordem::findOrFail($garantia->id_orcamento);
-    $cliente = Cliente::findOrFail($garantia->id_cliente);
-
-    $dias_garantia = (int) ($ordem->dias_garantia ?? 0);
-    $data_inicio = Carbon::parse($garantia->data_garantia);
-    $data_final = $data_inicio->copy()->addDays($dias_garantia);
-
-    $dados = [
-        'cliente' => $cliente,
-        'ordem' => $ordem,
-        'garantia' => $garantia,
-        'data_inicio' => $data_inicio->format('d/m/Y'),
-        'data_final' => $data_final->format('d/m/Y'),
-        'dias_garantia' => $dias_garantia,
-    ];
-
-    $pdf = Pdf::loadView('pdf.garantia', $dados);
-    return $pdf->download('garantia_'.$cliente->nome.'.pdf');
-}
-
 }
