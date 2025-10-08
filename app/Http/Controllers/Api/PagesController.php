@@ -16,7 +16,8 @@ class PagesController extends Controller
         return response()->json([
             'status'=>200,
             'message'=>'ok',
-            'loja'=>$loja
+            'loja'=>$loja,
+            'user'=>$user
         ]);
 
     }

@@ -25,6 +25,7 @@ class LojaController extends Controller
         $validados = $request->validate([
             'nome'=>'required|string',
             'cnpj'=>'required|string',
+            'logo'=>'required|string'
         ]);
 
         $loja = Loja::create($validados);

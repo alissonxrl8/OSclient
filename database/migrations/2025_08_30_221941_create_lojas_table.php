@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nome');
             $table->string('cnpj');
+            $table->string('logo');
             $table->timestamps();
         });
     }
