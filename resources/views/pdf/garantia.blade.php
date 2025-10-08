@@ -17,13 +17,14 @@ strong { color: #000; }
 <section>
   <h3>Dados do Cliente</h3>
   <p><strong>Nome:</strong> {{ $cliente->nome }}</p>
-  <p><strong>Contato:</strong> {{ $cliente->telefone ?? 'Não informado' }}</p>
+  <p><strong>Nome:</strong> {{ $cliente->cpf}}</p>
+  <p><strong>Contato:</strong> {{ $cliente->contato ?? 'Não informado' }}</p>
 </section>
 
 <section>
   <h3>Dados do Serviço</h3>
   <p><strong>Serviço:</strong> {{ $ordem->servico ?? 'N/A' }}</p>
-  <p><strong>Valor:</strong> R$ {{ number_format($ordem->valor ?? 0, 2, ',', '.') }}</p>
+  <p><strong>Valor:</strong> R$ {{ number_format($ordem->preco ?? 0, 2, ',', '.') }}</p>
   <p><strong>Data Inicial:</strong> {{ $data_inicio }}</p>
   <p><strong>Validade:</strong> {{ $data_final }} ({{ $dias_garantia }} dias)</p>
 </section>

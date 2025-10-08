@@ -31,6 +31,7 @@ Route::group(['middleware' => ['auth:sanctum']], function(){
     Route::resource('garantias', GarantiaController::class);
     Route::get('dados-garantia', [GarantiaController::class, 'dadosGarantia']);
     Route::get('baixar-garantia/{id}', [GarantiaController::class, 'baixarGarantia']);
+    Route::get('baixar-ordem/{id}', [OrdemController::class, 'baixarOrdem']);
     Route::get('ordens-cliente/{id}', [OrdemController::class, 'ClienteOrdem']);
     Route::get('home', [PagesController::class, 'home']);
 

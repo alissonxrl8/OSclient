@@ -9,72 +9,59 @@ use App\Models\Servico;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class OrdemController extends Controller
 {
-  
     public function index()
     {
         $user = Auth::user();
-    
-        $ordems = Ordem::where('id_user', $user->id)->get();
+        $ordens = Ordem::where('id_user', $user->id)->get();
 
         return response()->json([
             'status'=>200,
-            'ordens'=>$ordems
+            'ordens'=>$ordens
         ]);
     }
 
-public function store(Request $request)
-{
-    $user = Auth::user();
-    
-    $validados = $request->validate([
-        'id_servico'=> 'numeric|required',
-        'id_cliente'=> 'numeric|required',
-        'obs'=>'nullable|string',
-        'data'=>'required|date_format:Y-m-d',
-        'modelo'=>'required|string'
-    ]);
+    public function store(Request $request)
+    {
+        $user = Auth::user();
+        $validados = $request->validate([
+            'id_servico'=> 'numeric|required',
+            'id_cliente'=> 'numeric|required',
+            'obs'=>'nullable|string',
+            'data'=>'required|date_format:Y-m-d',
+            'modelo'=>'required|string'
+        ]);
 
-  
+        $servico = Servico::findOrFail($validados['id_servico']);
+        $data_formatada = Carbon::createFromFormat('Y-m-d', $validados['data'])->format('Y-m-d');
 
-    $servico = Servico::findOrFail($validados['id_servico']);
+        $ordem = Ordem::create([
+            'id_user' => $user->id,
+            'id_servico' => $validados['id_servico'],
+            'id_cliente' => $validados['id_cliente'],
+            'modelo' => $validados['modelo'],
+            'obs' => $validados['obs'],
+            'data' => $data_formatada,
+            'preco' => $servico->preco,
+            'preco_pago' => $servico->preco_pago,
+            'descricao' => $servico->descricao,
+            'dias_garantia' => $servico->dias_garantia,
+            'servico' => $servico->servico,
+        ]);
 
+        return response()->json([
+            'status'=>200,
+            'ordem'=>$ordem
+        ]);
+    }
 
-    
-    $data_formatada = Carbon::createFromFormat('Y-m-d', $validados['data'])->format('Y-m-d');
-
-
-    
-
-    $ordem = Ordem::create([
-    'id_user' => $user->id,
-    'id_servico' => $validados['id_servico'],
-    'id_cliente' => $validados['id_cliente'],
-    'modelo' => $validados['modelo'],
-    'obs' => $validados['obs'],
-    'data' => $data_formatada,
-    'preco' => $servico->preco,
-    'preco_pago' => $servico->preco_pago,
-    'descricao' => $servico->descricao,
-    'dias_garantia' => $servico->dias_garantia,
-    'servico' => $servico->servico, // 👈 pega o nome do serviço da tabela “servicos”
-]);
-
-    return response()->json([
-        'status'=>200,
-        'ordem'=>$ordem
-    ]);
-}
-
-   
     public function show(string $id)
     {
-       
         $ordem = Ordem::findOrFail($id);
         $servico = Servico::findOrFail($ordem->id_servico);
-       
 
         return response()->json([
             'status'=>200,
@@ -83,56 +70,66 @@ public function store(Request $request)
         ]);
     }
 
-    public function ClienteOrdem(string $id){
-     ;
-       $cliente = Cliente::findOrFail($id);
-       
-       $ordens = Ordem::where('id_cliente', $id)->get();
-       return response()->json([
-        'cliente'=>$cliente,
-        'ordens'=>$ordens
-       ]);
+    public function ClienteOrdem(string $id)
+    {
+        $cliente = Cliente::findOrFail($id);
+        $ordens = Ordem::where('id_cliente', $id)->get();
 
+        return response()->json([
+            'cliente'=>$cliente,
+            'ordens'=>$ordens
+        ]);
     }
 
-
-    
-   
     public function update(Request $request, string $id)
-{
-    $ordem = Ordem::findOrFail($id);
+    {
+        $ordem = Ordem::findOrFail($id);
+        $validados = $request->validate([
+            'servico' => 'required|string',
+            'descricao' => 'nullable|string',
+            'dias_garantia' => 'nullable|numeric',
+            'preco' => 'required|numeric',
+            'preco_pago' => 'nullable|numeric',
+            'modelo' => 'required|string',
+            'obs' => 'nullable|string',
+            'data' => 'required|date'
+        ]);
 
-    $validados = $request->validate([
-        'servico' => 'required|string',
-        'descricao' => 'nullable|string',
-        'dias_garantia' => 'nullable|numeric',
-        'preco' => 'required|numeric',
-        'preco_pago' => 'nullable|numeric',
-        'modelo' => 'required|string',
-        'obs' => 'nullable|string',
-        'data' => 'required|date'
-    ]);
+        $ordem->update($validados);
 
-    $ordem->update($validados);
+        return response()->json([
+            'status' => 200,
+            'message' => 'Ordem atualizada com sucesso!',
+            'ordem' => $ordem
+        ]);
+    }
 
-    return response()->json([
-        'status' => 200,
-        'message' => 'Ordem atualizada com sucesso!',
-        'ordem' => $ordem
-    ]);
-}
-
-
-    
     public function destroy(string $id)
     {
         $ordem = Ordem::findOrFail($id);
-
         $ordem->delete();
-        
+
         return response()->json([
             'status'=>200,
             'message'=>'Apagado com sucesso',
         ]);
+    }
+
+    // 🔹 Função para baixar Ordem em PDF
+    public function baixarOrdem($id)
+    {
+        $ordem = Ordem::findOrFail($id);
+        $cliente = Cliente::findOrFail($ordem->id_cliente);
+        $servico = Servico::findOrFail($ordem->id_servico);
+
+        $dados = [
+            'ordem' => $ordem,
+            'cliente' => $cliente,
+            'servico' => $servico,
+            'data_ordem' => Carbon::parse($ordem->data)->format('d/m/Y'),
+        ];
+
+        $pdf = Pdf::loadView('pdf.ordem', $dados);
+        return $pdf->download('ordem_'.$ordem->id.'.pdf');
     }
 }
