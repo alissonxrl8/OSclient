@@ -13,10 +13,12 @@ use Illuminate\Support\Facades\Auth;
 
 class GarantiaController extends Controller
 {
-    public function index()
+    // Lista todas as garantias do cliente logado
+    public function index(Request $request)
     {
         $user = Auth::user();
-        $garantias = Garantia::where('id_cliente', $user->id)->get();
+        $clienteId = $request->query('cliente') ?? $user->id;
+        $garantias = Garantia::where('id_cliente', $clienteId)->get();
 
         $garantiasFormatadas = $garantias->map(function($garantia) {
             $ordem = Ordem::find($garantia->id_orcamento);
@@ -45,6 +47,78 @@ class GarantiaController extends Controller
         ]);
     }
 
+    // Mostra detalhes de uma garantia
+    public function show(string $id)
+    {
+        $garantia = Garantia::findOrFail($id);
+        $ordem = Ordem::find($garantia->id_orcamento);
+        $dias_garantia = $ordem ? (int) ($ordem->dias_garantia ?? 0) : 0;
+
+        $data_garantia = Carbon::parse($garantia->data_garantia)->startOfDay();
+        $data_final = $data_garantia->copy()->addDays($dias_garantia)->startOfDay();
+        $dias_restantes = Carbon::now()->startOfDay()->diffInDays($data_final, false);
+        $expirada = $dias_restantes < 0;
+
+        return response()->json([
+            'status' => 200,
+            'garantia' => [
+                'id' => $garantia->id,
+                'id_orcamento' => $garantia->id_orcamento,
+                'id_cliente' => $garantia->id_cliente,
+                'id_user' => $garantia->id_user,
+                'data_garantia' => $data_garantia->format('Y-m-d'),
+                'data_final' => $data_final->format('Y-m-d'),
+                'dias_restantes' => $dias_restantes,
+                'expirada' => $expirada
+            ]
+        ]);
+    }
+
+    // Cria uma nova garantia
+    public function store(Request $request)
+    {
+        $user = Auth::user();
+
+        $validados = $request->validate([
+            'data_garantia' => 'required|date',
+            'id_orcamento' => 'required|numeric'
+        ]);
+
+        $data_formatada = Carbon::parse($validados['data_garantia'])->format('Y-m-d');
+
+        $garantia = Garantia::create([
+            'data_garantia' => $data_formatada,
+            'id_cliente' => $user->id,
+            'id_user' => $user->id,
+            'id_orcamento' => $validados['id_orcamento']
+        ]);
+
+        return response()->json(['status'=>201,'mensagem'=>'Garantia cadastrada com sucesso']);
+    }
+
+    // Atualiza uma garantia
+    public function update(Request $request, string $id)
+    {
+        $garantia = Garantia::findOrFail($id);
+        $validados = $request->validate([
+            'data_garantia' => 'sometimes|date',
+            'id_orcamento' => 'sometimes|numeric',
+            'id_cliente' => 'sometimes|numeric',
+            'id_user' => 'sometimes|numeric'
+        ]);
+        $garantia->update($validados);
+        return response()->json(['status'=>200,'mensagem'=>'Garantia atualizada com sucesso']);
+    }
+
+    // Deleta uma garantia
+    public function destroy(string $id)
+    {
+        $garantia = Garantia::findOrFail($id);
+        $garantia->delete();
+        return response()->json(['status'=>200,'mensagem'=>'Garantia deletada com sucesso']);
+    }
+
+    // Baixa garantia em PDF
     public function baixarGarantia($id)
     {
         $garantia = Garantia::findOrFail($id);
