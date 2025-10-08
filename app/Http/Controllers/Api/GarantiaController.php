@@ -13,10 +13,15 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class GarantiaController extends Controller
 {
-    public function index()
+    // GET /api/garantias?cliente=ID
+    public function index(Request $request)
     {
         $user = Auth::user();
-        $garantias = Garantia::where('id_cliente', $user->id)->get();
+        $clienteId = $request->query('cliente'); // Pega ?cliente=123 da URL
+
+        $garantias = Garantia::where('id_user', $user->id)
+                             ->when($clienteId, fn($q) => $q->where('id_cliente', $clienteId))
+                             ->get();
 
         $garantiasFormatadas = $garantias->map(function($garantia) {
             $ordem = Ordem::find($garantia->id_orcamento);
@@ -80,11 +85,11 @@ class GarantiaController extends Controller
             'id_orcamento' => 'required|numeric'
         ]);
 
-        $data_formatada = Carbon::parse($validados['data_garantia'])->format('Y-m-d');
+        $ordem = Ordem::findOrFail($validados['id_orcamento']);
 
         $garantia = Garantia::create([
-            'data_garantia' => $data_formatada,
-            'id_cliente' => $user->id,
+            'data_garantia' => Carbon::parse($validados['data_garantia'])->format('Y-m-d'),
+            'id_cliente' => $ordem->id_cliente, // usa cliente da ordem
             'id_user' => $user->id,
             'id_orcamento' => $validados['id_orcamento']
         ]);
@@ -97,9 +102,7 @@ class GarantiaController extends Controller
         $garantia = Garantia::findOrFail($id);
         $validados = $request->validate([
             'data_garantia' => 'sometimes|date',
-            'id_orcamento' => 'sometimes|numeric',
-            'id_cliente' => 'sometimes|numeric',
-            'id_user' => 'sometimes|numeric'
+            'id_orcamento' => 'sometimes|numeric'
         ]);
         $garantia->update($validados);
         return response()->json(['status'=>200,'mensagem'=>'Garantia atualizada com sucesso']);
